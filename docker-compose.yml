@@ -1,0 +1,88 @@
+version: "3.9"
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  SyncBoard — docker-compose.yml
+#
+#  ┌─────────────────────────────────────────────────────────────────────────┐
+#  │  macOS users: Docker Desktop cannot pass the webcam to containers.      │
+#  │  Use the recommended hybrid approach:                                   │
+#  │                                                                         │
+#  │    docker compose up postgres   ← only start the DB                    │
+#  │    ./start_macos.sh             ← backend + frontend run locally        │
+#  │                                                                         │
+#  │  OR use "Video file" / "Images" input instead of webcam — those        │
+#  │  work fine in full Docker mode.                                         │
+#  └─────────────────────────────────────────────────────────────────────────┘
+#
+#  Full Docker (video/images only, no webcam):
+#    docker compose up --build
+#
+#  Linux webcam support: uncomment the 'devices' block under 'backend'.
+# ══════════════════════════════════════════════════════════════════════════════
+
+services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: syncboard_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-syncboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-syncboard_secret}
+      POSTGRES_DB:       ${POSTGRES_DB:-syncboard}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-syncboard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Backend (FastAPI) ─────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: syncboard_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL:     postgresql+asyncpg://${POSTGRES_USER:-syncboard}:${POSTGRES_PASSWORD:-syncboard_secret}@postgres:5432/${POSTGRES_DB:-syncboard}
+      CORS_ORIGINS:     "http://localhost:5173,http://localhost:3000"
+      OCR_ENGINE:       tesseract
+      MIN_CONFIDENCE:   "30"
+      CLEAR_THRESHOLD:  "0.05"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    # ── Linux webcam passthrough (uncomment on Linux only) ──
+    # devices:
+    #   - /dev/video0:/dev/video0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Frontend (Vite) ───────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: syncboard_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+
+volumes:
+  postgres_data:

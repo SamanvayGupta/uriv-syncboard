@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Custom scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: #2a3a5a; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #3a4a7a; }
+
+/* ── Prose overrides for dark bg ────────────────────────────── */
+.prose { color: #d0d0d0; max-width: none; }
+.prose strong { color: #ffffff; }
+.prose code   { color: #a5f3fc; background: #0a1a2a;
+                padding: 0 3px; border-radius: 3px; font-size: 0.85em; }

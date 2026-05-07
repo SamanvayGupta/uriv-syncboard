@@ -1,0 +1,52 @@
+# ══════════════════════════════════════════════════════════════
+#  SyncBoard Backend — requirements.txt
+#
+#  Windows note:
+#    asyncpg requires Microsoft Visual C++ Build Tools to compile.
+#    If pip install fails on Windows, run this first:
+#      https://visualstudio.microsoft.com/visual-cpp-build-tools/
+#    Or switch DATABASE_URL to use psycopg2:
+#      pip install psycopg2-binary
+#      DATABASE_URL=postgresql+psycopg2://...
+#
+#  PaddleOCR is NOT included — it requires ~2 GB download.
+#  To enable: pip install paddlepaddle paddleocr
+#             then set OCR_ENGINE=paddle in backend/.env
+# ══════════════════════════════════════════════════════════════
+
+# ── Web Framework ──────────────────────────────────────────────
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+websockets>=12.0
+python-multipart>=0.0.9
+
+# ── Database ───────────────────────────────────────────────────
+sqlalchemy[asyncio]>=2.0.30
+asyncpg>=0.29.0
+# Windows fallback if asyncpg compile fails:
+#   pip install psycopg2-binary
+#   change DATABASE_URL scheme to postgresql+psycopg2://
+alembic>=1.13.0
+
+# ── Computer Vision ────────────────────────────────────────────
+opencv-python-headless>=4.9.0
+numpy>=1.26.0
+Pillow>=10.3.0
+
+# ── OCR (default — Tesseract binary must be installed) ─────────
+pytesseract>=0.3.10
+# Windows: https://github.com/UB-Mannheim/tesseract/wiki
+# macOS:   brew install tesseract
+# Ubuntu:  sudo apt install tesseract-ocr
+
+# ── Export formats ─────────────────────────────────────────────
+reportlab>=4.1.0
+python-docx>=1.1.0
+python-pptx>=0.6.23
+
+# ── Config / utilities ─────────────────────────────────────────
+python-dotenv>=1.0.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+aiofiles>=23.2.0
+httpx>=0.27.0
